@@ -177,6 +177,43 @@ NS_ASSUME_NONNULL_BEGIN
                     appId:(NSString *)appId
                 completion:(YKFU2FSessionSignCompletionBlock)completion;
 
+/*!
+ @method signWithWarClientData:keyHandle:appId:completion:
+ 
+ @abstract
+    Sends to the key an U2F sign request. The operation is performed asynchronously on a background execution queue.
+ 
+ @param rawClientData
+    The binary U2F authentication challenge received as part of SSH authentication:
+ https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.u2f#L176-L191
+
+ @param keyHandle
+    The U2F authentication keyHandle which is usually received from the authentication server and used by
+    the hardware key to identify the required cryptographic key for signing.
+    Format as defined by the FIDO Alliance specifications:
+    https://fidoalliance.org/specs/fido-u2f-v1.2-ps-20170411/fido-u2f-raw-message-formats-v1.2-ps-20170411.html#authentication-messages
+ 
+ @param appId
+    The application ID (sometimes reffered as origin or facet ID) as described by the U2F standard.
+    This is usually a domain which belongs to the application.
+    Documentation for the application ID format:
+    https://developers.yubico.com/U2F/App_ID.html
+ 
+ @param completion
+    The response block which gets executed after the request was processed by the key. The completion block will be
+    executed on a background thread. If the intention is to update the UI, dispatch the results on the main thread
+    to avoid an UIKit assertion.
+ 
+ NOTE:
+    This method is thread safe and can be invoked from the main or a background thread.
+    The key can execute only one request at a time. If multiple requests are made against the service, they are
+    queued in the order they are received and executed sequentially.
+ */
+- (void)signWithRawClientData:(NSData *)rawClientData
+                    keyHandle:(NSString *)keyHandle
+                        appId:(NSString *)appId
+                   completion:(YKFU2FSessionSignCompletionBlock)completion;
+
 /*
  Not available: use only the shared instance from the YKFAccessorySession.
  */

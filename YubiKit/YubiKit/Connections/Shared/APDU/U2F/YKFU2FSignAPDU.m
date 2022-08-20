@@ -43,14 +43,12 @@ static const UInt8 YKFU2FSignAPDUEnforceUserPresenceAndSign = 0x03;
 
 @implementation YKFU2FSignAPDU
 
-- (instancetype)initWithChallenge:(NSString *)challenge keyHandle:(NSString *)keyHandle appId:(NSString *)appId {
-    YKFAssertAbortInit(challenge);
+- (instancetype)initWithRawClientData:(NSData *)rawClientData keyHandle:(NSString *)keyHandle appId:(NSString *)appId {
+    YKFAssertAbortInit(rawClientData);
     YKFAssertAbortInit(keyHandle);
     YKFAssertAbortInit(appId);
-    
-    self.clientData = [[NSString alloc] initWithFormat:U2FClientDataTypeTemplate, U2FClientDataTypeAuthentication, challenge, appId];
-    
-    NSData *challengeSHA256 = [[self.clientData dataUsingEncoding:NSUTF8StringEncoding] ykf_SHA256];
+        
+    NSData *challengeSHA256 = [rawClientData ykf_SHA256];
     YKFAssertAbortInit(challengeSHA256);
     
     NSData *applicationSHA256 = [[appId dataUsingEncoding:NSUTF8StringEncoding] ykf_SHA256];
@@ -70,6 +68,21 @@ static const UInt8 YKFU2FSignAPDUEnforceUserPresenceAndSign = 0x03;
     [rawU2FRequest appendData:keyHandleData];
     
     return [super initWithCla:0 ins:YKFAPDUCommandInstructionU2FSign p1:YKFU2FSignAPDUEnforceUserPresenceAndSign p2:0 data:rawU2FRequest type:YKFAPDUTypeExtended];
+}
+
+- (instancetype)initWithChallenge:(NSString *)challenge keyHandle:(NSString *)keyHandle appId:(NSString *)appId {
+    YKFAssertAbortInit(challenge);
+    YKFAssertAbortInit(keyHandle);
+    YKFAssertAbortInit(appId);
+    
+    NSString* clientData = [[NSString alloc] initWithFormat:U2FClientDataTypeTemplate, U2FClientDataTypeAuthentication, challenge, appId];    
+    self = [self initWithRawClientData: [clientData dataUsingEncoding:NSUTF8StringEncoding]
+                              keyHandle: keyHandle
+                                  appId: appId];
+    if(self) {
+        self.clientData = clientData;
+    }
+    return self;
 }
 
 @end

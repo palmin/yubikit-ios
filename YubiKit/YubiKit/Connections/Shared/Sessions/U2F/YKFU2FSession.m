@@ -121,6 +121,34 @@ static const NSTimeInterval YKFU2FRetryTimeInterval = 0.5; // seconds
     }];
 }
 
+- (void)signWithRawClientData:(NSData *)rawClientData
+                keyHandle:(NSString *)keyHandle
+                    appId:(NSString *)appId
+               completion:(YKFU2FSessionSignCompletionBlock)completion {
+    YKFParameterAssertReturn(rawClientData);
+    YKFParameterAssertReturn(keyHandle);
+    YKFParameterAssertReturn(appId);
+    YKFParameterAssertReturn(completion);
+    
+    // we need client data for YKFU2FSignResponse and by picking encoding where
+    // all 8-bit values are valid it will be able to contanin any binary data
+    NSString* clientData = [[NSString alloc] initWithData:rawClientData
+                                                 encoding:NSISOLatin1StringEncoding];
+
+    YKFU2FSignAPDU *apdu = [[YKFU2FSignAPDU alloc] initWithRawClientData:rawClientData keyHandle:keyHandle appId:appId];
+    
+    ykf_weak_self();
+    [self executeU2FCommand:apdu retryCount:0 completion:^(NSData *result, NSError *error) {
+        ykf_safe_strong_self();
+        if (error) {
+            completion(nil, error);
+            return;
+        }
+        YKFU2FSignResponse *signResponse = [strongSelf processSignData:result keyHandle:keyHandle clientData:clientData];
+        completion(signResponse, nil);
+    }];
+}
+
 #pragma mark - Request Execution
 
 - (void)executeU2FCommand:(YKFAPDU *)apdu retryCount:(int)retryCount completion:(YKFU2FServiceResultCompletionBlock)completion {

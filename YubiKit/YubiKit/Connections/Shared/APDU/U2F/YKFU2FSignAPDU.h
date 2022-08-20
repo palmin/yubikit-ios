@@ -25,7 +25,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable instancetype)initWithChallenge:(NSString *)challenge
                                  keyHandle:(NSString *)keyHandle
-                                     appId:(NSString *)appId NS_DESIGNATED_INITIALIZER;
+                                     appId:(NSString *)appId;
+
+// allow signing raw messages instead of JSON useful for id_ecdsa_sk
+// authentication in SSH.
+- (instancetype)initWithRawClientData:(NSData *)rawClientData
+                            keyHandle:(NSString *)keyHandle
+                                appId:(NSString *)appId NS_DESIGNATED_INITIALIZER;
+
 - (instancetype)init NS_UNAVAILABLE;
 
 @end
